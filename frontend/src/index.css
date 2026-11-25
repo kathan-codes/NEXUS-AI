@@ -2,24 +2,27 @@
 
 @layer base {
   :root {
-    --hud-bg: #050911;
-    --hud-panel: rgba(10, 18, 32, 0.84);
-    --hud-border: rgba(34, 211, 238, 0.22);
-    --hud-cyan: #22d3ee;
-    --hud-blue: #3b82f6;
-    --hud-amber: #f59e0b;
-    --hud-emerald: #10b981;
+    --nexus-bg: #04070f;
+    --nexus-surface: rgba(8, 15, 29, 0.86);
+    --nexus-surface-elevated: rgba(12, 22, 42, 0.92);
+    --nexus-border: rgba(56, 189, 248, 0.16);
+    --nexus-border-strong: rgba(56, 189, 248, 0.34);
+    --nexus-cyan: #22d3ee;
+    --nexus-blue: #3b82f6;
+    --nexus-amber: #f59e0b;
+    --nexus-emerald: #10b981;
   }
 
   body {
     font-family: "Inter", system-ui, -apple-system, sans-serif;
-    background-color: var(--hud-bg);
+    background-color: var(--nexus-bg);
     background-image:
-      radial-gradient(circle at 18% 12%, rgba(34, 211, 238, 0.08), transparent 36%),
-      radial-gradient(circle at 82% 85%, rgba(59, 130, 246, 0.08), transparent 40%),
-      linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      radial-gradient(circle at 14% 10%, rgba(37, 99, 235, 0.10), transparent 38%),
+      radial-gradient(circle at 86% 88%, rgba(6, 182, 212, 0.08), transparent 42%),
+      linear-gradient(rgba(56, 189, 248, 0.024) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.024) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    color: #e2e8f0;
     overflow: hidden;
   }
 
@@ -29,23 +32,29 @@
 
   code, pre, .font-mono {
     font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
   }
 }
 
 .hud-panel {
-  background: var(--hud-panel);
-  border: 1px solid var(--hud-border);
-  backdrop-filter: blur(14px);
+  background: var(--nexus-surface);
+  border: 1px solid var(--nexus-border);
+  backdrop-filter: blur(12px);
   box-shadow:
-    inset 0 1px 0 rgba(165, 243, 252, 0.06),
-    0 12px 32px rgba(2, 6, 15, 0.55);
+    inset 0 1px 0 rgba(186, 230, 253, 0.05),
+    0 10px 28px rgba(2, 6, 15, 0.5);
+}
+
+.hud-panel-subtle {
+  background: rgba(7, 13, 26, 0.72);
+  border: 1px solid rgba(56, 189, 248, 0.12);
 }
 
 .hud-panel-amber {
-  background: rgba(24, 18, 10, 0.88);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 0 24px rgba(245, 158, 11, 0.12);
+  background: rgba(24, 17, 9, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.42);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1);
 }
 
 .drag-region {
@@ -67,35 +76,34 @@
 }
 
 .animate-spin-slow {
-  animation: spinSlow 24s linear infinite;
+  animation: spinSlow 28s linear infinite;
   transform-origin: center;
 }
 
 .animate-spin-fast {
-  animation: spinSlow 4.5s linear infinite;
+  animation: spinSlow 5s linear infinite;
   transform-origin: center;
 }
 
 .animate-spin-reverse {
-  animation: spinReverse 14s linear infinite;
+  animation: spinReverse 18s linear infinite;
   transform-origin: center;
 }
 
-/* Custom sleek HUD scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.35);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(34, 211, 238, 0.28);
+  background: rgba(56, 189, 248, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.5);
+  background: rgba(56, 189, 248, 0.48);
 }

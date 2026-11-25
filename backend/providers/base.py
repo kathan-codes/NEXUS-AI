@@ -35,7 +35,7 @@ def post_json(url: str, payload: dict[str, Any], headers: dict[str, str], timeou
     req = urllib.request.Request(
         url,
         data=body,
-        headers={"Content-Type": "application/json", "User-Agent": "JARVIS-Desktop/1.0", **headers},
+        headers={"Content-Type": "application/json", "User-Agent": "NEXUS-AI-Desktop/1.0", **headers},
         method="POST",
     )
     try:
@@ -51,7 +51,7 @@ def post_json(url: str, payload: dict[str, Any], headers: dict[str, str], timeou
 def get_json(url: str, headers: dict[str, str] | None = None, timeout: float = 3.0) -> dict[str, Any]:
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "JARVIS-Desktop/1.0", **(headers or {})},
+        headers={"User-Agent": "NEXUS-AI-Desktop/1.0", **(headers or {})},
         method="GET",
     )
     with urllib.request.urlopen(req, timeout=timeout) as resp:

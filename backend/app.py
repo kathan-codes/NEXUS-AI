@@ -1,4 +1,4 @@
-"""FastAPI application for J.A.R.V.I.S. local desktop assistant."""
+"""FastAPI application for NEXUS-AI local desktop assistant."""
 
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ def create_app(db_path: Path | None = None, vault_path: Path | None = None) -> F
     gate = ApprovalGate(db=db, registry=registry, ctx=ctx)
     ai_hub = AIProviderHub(db=db, vault=vault, registry=registry, gate=gate)
 
-    app = FastAPI(title="J.A.R.V.I.S. Core API", version="1.0.0")
+    app = FastAPI(title="NEXUS-AI Core API", version="1.0.0")
 
     app.add_middleware(
         CORSMiddleware,
@@ -109,12 +109,12 @@ def create_app(db_path: Path | None = None, vault_path: Path | None = None) -> F
         allow_headers=["*"],
     )
 
-    api_token = os.environ.get("JARVIS_API_TOKEN", "").strip()
+    api_token = (os.environ.get("NEXUS_API_TOKEN") or os.environ.get("JARVIS_API_TOKEN") or "").strip()
 
     @app.middleware("http")
     async def verify_token(request: Request, call_next):
         if api_token and request.url.path.startswith("/api/"):
-            provided = request.headers.get("X-Jarvis-Token", "")
+            provided = request.headers.get("X-Nexus-Token") or request.headers.get("X-Jarvis-Token") or ""
             if provided != api_token:
                 raise HTTPException(status_code=401, detail="Invalid session token")
         return await call_next(request)
@@ -134,7 +134,7 @@ def create_app(db_path: Path | None = None, vault_path: Path | None = None) -> F
     def health() -> dict[str, Any]:
         return {
             "status": "online",
-            "service": "jarvis-core",
+            "service": "nexus-ai-core",
             "provider": ai_hub.status()["active_provider"],
             "tools_count": len(registry.list_specs()),
         }

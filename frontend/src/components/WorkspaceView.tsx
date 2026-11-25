@@ -70,8 +70,8 @@ export function WorkspaceView({ onActionQueued }: WorkspaceViewProps) {
   }, [selectedId]);
 
   const handlePickFolder = async () => {
-    if (window.jarvisDesktop) {
-      const chosen = await window.jarvisDesktop.pickFolder();
+    if (window.nexusDesktop) {
+      const chosen = await window.nexusDesktop.pickFolder();
       if (chosen) {
         setNewProjPath(chosen);
         if (!newProjName) {
@@ -188,7 +188,7 @@ export function WorkspaceView({ onActionQueued }: WorkspaceViewProps) {
                 data-testid="project-path-input"
                 className="flex-1 bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 outline-none"
               />
-              {window.jarvisDesktop && (
+              {window.nexusDesktop && (
                 <button
                   type="button"
                   onClick={handlePickFolder}

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Bot,
+  Check,
   CheckCircle2,
+  Copy,
   MessageSquarePlus,
   Mic,
   Send,
@@ -37,7 +39,6 @@ const QUICK_PROMPTS = [
 ];
 
 function FormattedText({ text }: { text: string }) {
-  // Lightweight safe renderer supporting fenced code blocks and inline bold/code
   const segments = text.split(/(```[\s\S]*?```)/g);
   return (
     <div className="space-y-2 text-sm leading-relaxed break-words">
@@ -47,7 +48,7 @@ function FormattedText({ text }: { text: string }) {
           return (
             <pre
               key={i}
-              className="p-3 rounded-lg bg-slate-950/90 border border-cyan-500/20 text-xs font-mono text-cyan-100 overflow-x-auto"
+              className="p-3 rounded-lg bg-slate-950/90 border border-sky-500/20 text-xs font-mono text-sky-100 overflow-x-auto"
             >
               <code>{inner}</code>
             </pre>
@@ -62,7 +63,7 @@ function FormattedText({ text }: { text: string }) {
                     return (
                       <code
                         key={pi}
-                        className="px-1.5 py-0.5 rounded bg-slate-900 text-cyan-300 font-mono text-xs"
+                        className="px-1.5 py-0.5 rounded bg-slate-900 text-sky-300 font-mono text-xs"
                       >
                         {part.slice(1, -1)}
                       </code>
@@ -70,7 +71,7 @@ function FormattedText({ text }: { text: string }) {
                   }
                   if (part.startsWith("**") && part.endsWith("**")) {
                     return (
-                      <strong key={pi} className="text-cyan-100 font-semibold">
+                      <strong key={pi} className="text-sky-100 font-semibold">
                         {part.slice(2, -2)}
                       </strong>
                     );
@@ -102,6 +103,7 @@ export function ChatView({
   onRejectAction,
 }: ChatViewProps) {
   const [draft, setDraft] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -116,22 +118,32 @@ export function ChatView({
     await onSendMessage(msg);
   };
 
+  const handleCopy = async (id: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 1500);
+    } catch {
+      // clipboard unavailable
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-3 h-full min-h-0">
+    <div className="grid grid-cols-1 lg:grid-cols-[230px_1fr] gap-3 h-full min-h-0">
       {/* Conversation History Rail */}
-      <aside className="hud-panel rounded-xl p-3 flex flex-col min-h-0">
+      <aside className="hud-panel rounded-lg p-3 flex flex-col min-h-0">
         <button
           type="button"
           onClick={onNewConversation}
           data-testid="new-chat-btn"
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 text-xs font-medium transition cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-100 text-xs font-medium transition cursor-pointer"
         >
           <MessageSquarePlus className="w-4 h-4" />
           <span>New Session</span>
         </button>
 
-        <div className="text-[11px] font-mono uppercase tracking-widest text-slate-400 mt-3 mb-2">
-          History ({conversations.length})
+        <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mt-3 mb-2">
+          Sessions ({conversations.length})
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-1 pr-1">
@@ -145,7 +157,7 @@ export function ChatView({
                   key={c.id}
                   className={`group flex items-center justify-between gap-1 px-2.5 py-2 rounded-lg text-xs transition cursor-pointer ${
                     active
-                      ? "bg-cyan-500/15 border border-cyan-400/40 text-cyan-100"
+                      ? "bg-sky-500/15 border border-sky-400/35 text-sky-100"
                       : "hover:bg-slate-800/60 text-slate-300 border border-transparent"
                   }`}
                   onClick={() => onSelectConversation(c.id)}
@@ -170,14 +182,14 @@ export function ChatView({
       </aside>
 
       {/* Main Conversation Stream */}
-      <section className="hud-panel rounded-xl flex flex-col min-h-0 overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-cyan-500/15 flex items-center justify-between">
+      <section className="hud-panel rounded-lg flex flex-col min-h-0 overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-sky-500/15 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-display font-semibold text-cyan-100 tracking-wide">
-              COMMAND CONSOLE
+            <h2 className="text-sm font-display font-semibold text-slate-100 tracking-wide">
+              NEXUS-AI COMMAND CONSOLE
             </h2>
             <p className="text-[11px] text-slate-400">
-              Natural language dialogue, context memory, and gated desktop orchestration
+              Natural language dialogue, context memory, and approval-gated orchestration
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -186,7 +198,7 @@ export function ChatView({
                 key={qp}
                 type="button"
                 onClick={() => onSendMessage(qp)}
-                className="px-2 py-1 rounded-md bg-slate-900/90 hover:bg-cyan-500/15 border border-slate-700 hover:border-cyan-400/40 text-[11px] font-mono text-slate-300 hover:text-cyan-200 transition cursor-pointer"
+                className="px-2 py-1 rounded bg-slate-900/90 hover:bg-sky-500/15 border border-slate-700/80 hover:border-sky-400/40 text-[11px] font-mono text-slate-300 hover:text-sky-200 transition cursor-pointer"
               >
                 {qp}
               </button>
@@ -197,14 +209,14 @@ export function ChatView({
         <div className="flex-1 overflow-y-auto p-4 space-y-4" data-testid="chat-messages">
           {messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto py-8">
-              <div className="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mb-3">
-                <Bot className="w-6 h-6 text-cyan-300" />
+              <div className="w-12 h-12 rounded-lg bg-sky-500/10 border border-sky-400/30 flex items-center justify-center mb-3">
+                <Bot className="w-6 h-6 text-sky-300" />
               </div>
-              <h3 className="text-base font-display font-semibold text-cyan-100">
-                J.A.R.V.I.S. Online and Standing By
+              <h3 className="text-base font-display font-semibold text-slate-100">
+                NEXUS-AI Online and Standing By
               </h3>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Ask for live system diagnostics, weather briefings, scoped file searches, project inspection, or open
+                Request live diagnostics, weather briefings, scoped file searches, workspace inspection, or launch
                 applications and websites with explicit security confirmation.
               </p>
             </div>
@@ -215,22 +227,34 @@ export function ChatView({
             return (
               <div key={m.id} className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
                 {!isUser && (
-                  <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-4 h-4 text-cyan-300" />
+                  <div className="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-400/30 flex items-center justify-center shrink-0 mt-0.5">
+                    <Bot className="w-4 h-4 text-sky-300" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[82%] rounded-xl px-4 py-3 ${
+                  className={`group max-w-[82%] rounded-lg px-4 py-3 ${
                     isUser
                       ? "bg-blue-600/20 border border-blue-400/30 text-slate-100"
-                      : "bg-slate-900/80 border border-cyan-500/20 text-slate-200"
+                      : "bg-slate-900/85 border border-sky-500/20 text-slate-200"
                   }`}
                 >
-                  <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1">
-                    <span>{isUser ? "Operator" : "J.A.R.V.I.S."}</span>
-                    {m.provider && <span className="text-cyan-400">· {m.provider}</span>}
-                    {m.model && <span className="text-slate-500">({m.model})</span>}
+                  <div className="flex items-center justify-between gap-4 text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span>{isUser ? "Operator" : "NEXUS-AI"}</span>
+                      {m.provider && <span className="text-sky-400">· {m.provider}</span>}
+                      {m.model && <span className="text-slate-500">({m.model})</span>}
+                    </div>
+                    {!isUser && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(m.id, m.content)}
+                        className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-sky-300 transition cursor-pointer"
+                        title="Copy response"
+                      >
+                        {copiedId === m.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
                   </div>
                   <FormattedText text={m.content} />
                 </div>
@@ -250,7 +274,7 @@ export function ChatView({
                 <div
                   key={act.id}
                   data-testid="inline-pending-action"
-                  className="hud-panel-amber rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="hud-panel-amber rounded-lg p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="flex items-start gap-2.5">
                     <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
@@ -284,23 +308,23 @@ export function ChatView({
           )}
 
           {isSending && (
-            <div className="text-xs font-mono text-cyan-300 animate-pulse">
-              J.A.R.V.I.S. is processing request...
+            <div className="text-xs font-mono text-sky-300 animate-pulse">
+              NEXUS-AI is processing request...
             </div>
           )}
           <div ref={endRef} />
         </div>
 
         {/* Input Bar */}
-        <form onSubmit={handleSubmit} className="p-3 border-t border-cyan-500/15 bg-slate-950/60 flex gap-2">
+        <form onSubmit={handleSubmit} className="p-3 border-t border-sky-500/15 bg-slate-950/70 flex gap-2">
           <button
             type="button"
             onClick={onToggleListen}
             title="Voice input"
-            className={`px-3 rounded-xl border transition cursor-pointer ${
+            className={`px-3 rounded-lg border transition cursor-pointer ${
               isListening
                 ? "bg-emerald-500/25 border-emerald-400 text-emerald-200"
-                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-cyan-400/50"
+                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-sky-400/50"
             }`}
           >
             <Mic className="w-4 h-4" />
@@ -309,15 +333,15 @@ export function ChatView({
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Issue a command or ask J.A.R.V.I.S. anything..."
+            placeholder="Issue a command or ask NEXUS-AI anything..."
             data-testid="chat-input"
-            className="flex-1 bg-slate-900/90 border border-slate-700/90 focus:border-cyan-400/60 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none"
+            className="flex-1 bg-slate-900/90 border border-slate-700/90 focus:border-sky-400/60 rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none"
           />
           <button
             type="submit"
             disabled={!draft.trim() || isSending}
             data-testid="chat-send-btn"
-            className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 disabled:opacity-40 border border-cyan-400/50 text-cyan-100 text-sm font-medium flex items-center gap-2 transition cursor-pointer"
+            className="px-4 py-2.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 disabled:opacity-40 border border-sky-400/50 text-sky-100 text-sm font-medium flex items-center gap-2 transition cursor-pointer"
           >
             <span>Send</span>
             <Send className="w-4 h-4" />

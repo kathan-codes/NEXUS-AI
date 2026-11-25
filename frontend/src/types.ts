@@ -238,7 +238,7 @@ export interface ProviderStatus {
 
 declare global {
   interface Window {
-    jarvisDesktop?: {
+    nexusDesktop?: {
       isElectron: boolean;
       getConfig: () => Promise<{ apiBase: string; apiToken: string; isElectron: boolean }>;
       pickFolder: () => Promise<string | null>;

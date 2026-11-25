@@ -22,8 +22,8 @@ let initialized = false;
 
 export async function initApiClient(): Promise<void> {
   if (initialized) return;
-  if (window.jarvisDesktop) {
-    const cfg = await window.jarvisDesktop.getConfig();
+  if (window.nexusDesktop) {
+    const cfg = await window.nexusDesktop.getConfig();
     apiBase = cfg.apiBase;
     apiToken = cfg.apiToken;
   }
@@ -47,7 +47,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...(options.headers as Record<string, string> | undefined),
   };
   if (apiToken) {
-    headers["X-Jarvis-Token"] = apiToken;
+    headers["X-Nexus-Token"] = apiToken;
   }
   const res = await fetch(`${apiBase}${path}`, { ...options, headers });
   if (!res.ok) {

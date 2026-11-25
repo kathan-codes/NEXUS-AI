@@ -1,7 +1,7 @@
 {
-  "name": "jarvis-desktop-assistant",
+  "name": "nexus-ai-desktop",
   "version": "1.0.0",
-  "description": "J.A.R.V.I.S. — Futuristic Personal Desktop AI Assistant",
+  "description": "NEXUS-AI — Futuristic Personal Desktop AI Assistant",
   "main": "electron/main.cjs",
   "scripts": {
     "dev:backend": "python -m backend.run",

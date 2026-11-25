@@ -1,4 +1,4 @@
-"""Uvicorn entrypoint for J.A.R.V.I.S. Core backend."""
+"""Uvicorn entrypoint for NEXUS-AI Core backend."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from backend.config import DEFAULT_HOST, DEFAULT_PORT
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run J.A.R.V.I.S. Core Backend")
+    parser = argparse.ArgumentParser(description="Run NEXUS-AI Core Backend")
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     args = parser.parse_args()

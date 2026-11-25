@@ -78,13 +78,13 @@ export function SettingsModal({ open, onClose, onUpdated }: SettingsModalProps) 
         data-testid="settings-modal"
         className="hud-panel rounded-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden"
       >
-        <div className="px-5 py-3.5 border-b border-cyan-500/20 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-b border-sky-500/20 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-display font-semibold text-cyan-100">
-              SYSTEM CONFIGURATION & KEY VAULT
+            <h2 className="text-base font-display font-semibold text-sky-100">
+              NEXUS-AI CONFIGURATION & KEY VAULT
             </h2>
             <p className="text-xs text-slate-400">
-              AI providers, Windows DPAPI encrypted keys, weather location, and voice settings
+              AI providers, Windows DPAPI encrypted keys, weather location, voice, and system info
             </p>
           </div>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-100 cursor-pointer">
@@ -268,10 +268,26 @@ export function SettingsModal({ open, onClose, onUpdated }: SettingsModalProps) 
                   type="text"
                   value={settings.voice_wake_phrase}
                   onChange={(e) => setSettings({ ...settings, voice_wake_phrase: e.target.value })}
-                  placeholder="Wake phrase"
+                  placeholder="Wake phrase (e.g. hey nexus)"
                   className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 font-mono text-slate-100"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* About NEXUS-AI */}
+          <div className="pt-3 border-t border-slate-800 space-y-1.5">
+            <h3 className="font-mono uppercase tracking-wider text-sky-300">About NEXUS-AI</h3>
+            <div className="p-3 rounded-lg bg-slate-950/75 border border-slate-800 text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="font-display font-semibold text-slate-100">NEXUS-AI Desktop Assistant v1.0.0</div>
+                <div className="text-[11px] text-slate-400">
+                  Local-first FastAPI + React + Electron intelligence platform with DPAPI key encryption and approval-gated desktop control.
+                </div>
+              </div>
+              <span className="font-mono text-[10px] px-2 py-1 rounded bg-sky-500/15 border border-sky-400/30 text-sky-300 shrink-0">
+                LOCAL-FIRST · ZERO-TRUST
+              </span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-"""Configuration, paths, and security guardrails for J.A.R.V.I.S."""
+"""Configuration, paths, and security guardrails for NEXUS-AI."""
 
 from __future__ import annotations
 
@@ -6,12 +6,15 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = Path(os.environ.get("JARVIS_DATA_DIR", str(BASE_DIR / "data"))).resolve()
+DATA_DIR = Path(
+    os.environ.get("NEXUS_DATA_DIR") or os.environ.get("JARVIS_DATA_DIR") or str(BASE_DIR / "data")
+).resolve()
+# Preserve jarvis.db filename for existing local database compatibility.
 DB_PATH = DATA_DIR / "jarvis.db"
 VAULT_PATH = DATA_DIR / "secrets.vault.json"
 
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = int(os.environ.get("JARVIS_PORT", "8765"))
+DEFAULT_PORT = int(os.environ.get("NEXUS_PORT") or os.environ.get("JARVIS_PORT") or "8765")
 
 # Sensitive directory names blocked during file search and workspace reads.
 BLOCKED_DIR_NAMES = frozenset(
@@ -70,10 +73,10 @@ DEFAULT_SETTINGS = {
     "weather_lon": -74.0060,
     "voice_tts_enabled": True,
     "voice_tts_engine": "browser",  # browser | sapi
-    "voice_wake_phrase": "hey jarvis",
+    "voice_wake_phrase": "hey nexus",
     "voice_wake_enabled": False,
     "system_prompt": (
-        "You are J.A.R.V.I.S., a precise, calm, futuristic personal desktop AI assistant. "
+        "You are NEXUS-AI, a precise, calm, futuristic personal desktop AI assistant. "
         "Be concise, helpful, technically accurate, and security-conscious. Never claim an action "
         "succeeded unless its tool output confirms it, and always respect user approval gates."
     ),

@@ -5,8 +5,11 @@ const http = require("http");
 const { spawn } = require("child_process");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
-const BACKEND_PORT = Number(process.env.JARVIS_PORT || 8765);
-const API_TOKEN = process.env.JARVIS_API_TOKEN || crypto.randomBytes(24).toString("hex");
+const BACKEND_PORT = Number(process.env.NEXUS_PORT || process.env.JARVIS_PORT || 8765);
+const API_TOKEN =
+  process.env.NEXUS_API_TOKEN ||
+  process.env.JARVIS_API_TOKEN ||
+  crypto.randomBytes(24).toString("hex");
 
 let mainWindow = null;
 let backendProc = null;
@@ -21,7 +24,7 @@ function waitForBackend(retries = 40) {
           host: "127.0.0.1",
           port: BACKEND_PORT,
           path: "/api/health",
-          headers: { "X-Jarvis-Token": API_TOKEN },
+          headers: { "X-Nexus-Token": API_TOKEN },
           timeout: 1000,
         },
         (res) => {
@@ -39,7 +42,7 @@ function waitForBackend(retries = 40) {
         if (attempts < retries) {
           setTimeout(probe, 250);
         } else {
-          reject(new Error("Timed out waiting for J.A.R.V.I.S. backend"));
+          reject(new Error("Timed out waiting for NEXUS-AI backend"));
         }
       });
     };
@@ -48,12 +51,12 @@ function waitForBackend(retries = 40) {
 }
 
 function startBackend() {
-  const pythonCmd = process.env.JARVIS_PYTHON || "python";
+  const pythonCmd = process.env.NEXUS_PYTHON || process.env.JARVIS_PYTHON || "python";
   backendProc = spawn(pythonCmd, ["-m", "backend.run", "--host", "127.0.0.1", "--port", String(BACKEND_PORT)], {
     cwd: ROOT_DIR,
     env: {
       ...process.env,
-      JARVIS_API_TOKEN: API_TOKEN,
+      NEXUS_API_TOKEN: API_TOKEN,
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
@@ -68,10 +71,10 @@ function createWindow() {
     height: 920,
     minWidth: 1080,
     minHeight: 700,
-    backgroundColor: "#050911",
+    backgroundColor: "#04070f",
     frame: false,
     titleBarStyle: "hidden",
-    title: "J.A.R.V.I.S. — Personal Desktop AI",
+    title: "NEXUS-AI — Personal Desktop AI",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -80,7 +83,7 @@ function createWindow() {
     },
   });
 
-  const devUrl = process.env.JARVIS_DEV_URL;
+  const devUrl = process.env.NEXUS_DEV_URL || process.env.JARVIS_DEV_URL;
   if (devUrl) {
     mainWindow.loadURL(devUrl);
   } else {
@@ -92,30 +95,34 @@ function createWindow() {
   });
 }
 
-ipcMain.handle("jarvis:get-config", () => ({
+const getConfigHandler = () => ({
   apiBase: `http://127.0.0.1:${BACKEND_PORT}`,
   apiToken: API_TOKEN,
   isElectron: true,
-}));
+});
 
-ipcMain.handle("jarvis:pick-folder", async () => {
+const pickFolderHandler = async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ["openDirectory"],
-    title: "Select Project Folder for J.A.R.V.I.S. Workspace",
+    title: "Select Project Folder for NEXUS-AI Workspace",
   });
   if (result.canceled || !result.filePaths.length) return null;
   return result.filePaths[0];
-});
+};
 
-ipcMain.handle("jarvis:window-control", (_event, action) => {
+const windowControlHandler = (_event, action) => {
   if (!mainWindow) return;
   if (action === "minimize") mainWindow.minimize();
   else if (action === "maximize") {
     if (mainWindow.isMaximized()) mainWindow.unmaximize();
     else mainWindow.maximize();
   } else if (action === "close") mainWindow.close();
-});
+};
+
+ipcMain.handle("nexus:get-config", getConfigHandler);
+ipcMain.handle("nexus:pick-folder", pickFolderHandler);
+ipcMain.handle("nexus:window-control", windowControlHandler);
 
 app.whenReady().then(async () => {
   startBackend();

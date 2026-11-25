@@ -45,7 +45,7 @@ class WeatherService:
     def _fetch_json(url: str, timeout: float = 8.0) -> dict[str, Any]:
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": "JARVIS-Desktop-Assistant/1.0"},
+            headers={"User-Agent": "NEXUS-AI-Desktop/1.0"},
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))

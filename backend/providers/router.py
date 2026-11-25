@@ -119,7 +119,7 @@ class AIProviderHub:
         raw = text.strip()
         low = raw.lower()
         # Strip optional wake phrase prefix
-        for prefix in ("hey jarvis,", "hey jarvis", "jarvis,", "jarvis"):
+        for prefix in ("hey nexus,", "hey nexus", "nexus-ai,", "nexus-ai", "nexus,", "nexus"):
             if low.startswith(prefix):
                 raw = raw[len(prefix) :].strip()
                 low = raw.lower()

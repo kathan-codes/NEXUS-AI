@@ -9,7 +9,7 @@ from .base import BaseAIProvider, ProviderError, ProviderResponse, ToolCall, get
 
 def probe_ollama(base_url: str = "http://127.0.0.1:11434") -> dict[str, Any]:
     try:
-        data = get_json(f"{base_url.rstrip('/')}/api/tags", timeout=1.5)
+        data = get_json(f"{base_url.rstrip('/')}/api/tags", timeout=0.4)
         models = [m.get("name") for m in data.get("models") or [] if m.get("name")]
         return {"reachable": True, "models": models}
     except Exception:

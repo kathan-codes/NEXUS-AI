@@ -1,1 +1,1 @@
-"""J.A.R.V.I.S. local desktop assistant backend package."""
+"""NEXUS-AI local desktop assistant backend package."""

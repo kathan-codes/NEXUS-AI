@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BellRing,
-  Cpu,
   FolderGit2,
   Layers,
+  LayoutDashboard,
   MessageSquare,
   Minus,
   MonitorCog,
@@ -15,24 +15,27 @@ import { api, getTelemetryWsUrl, initApiClient } from "./api";
 import { ArcCore } from "./components/ArcCore";
 import { ApprovalModal } from "./components/ApprovalModal";
 import { ChatView } from "./components/ChatView";
+import { DashboardView } from "./components/DashboardView";
 import { DesktopControlView } from "./components/DesktopControlView";
 import { SettingsModal } from "./components/SettingsModal";
-import { TelemetryPanel } from "./components/TelemetryPanel";
 import { ToolsView } from "./components/ToolsView";
 import { VoiceWaveform } from "./components/VoiceWaveform";
 import { WorkspaceView } from "./components/WorkspaceView";
 import type {
   AIState,
+  AuditLogEntry,
   ChatMessage,
   Conversation,
   PendingAction,
+  ProjectSummary,
+  ProviderStatus,
   SettingsData,
   TelemetrySnapshot,
   ToolSpec,
   WeatherData,
 } from "./types";
 
-type TabId = "chat" | "desktop" | "workspace" | "tools";
+type TabId = "overview" | "chat" | "desktop" | "workspace" | "tools";
 
 interface SpeechRecognitionInstance {
   continuous: boolean;
@@ -63,14 +66,18 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionInstance) | nul
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabId>("chat");
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [aiState, setAiState] = useState<AIState>("idle");
   const [providerName, setProviderName] = useState("local_router");
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus | null>(null);
 
   const [telemetry, setTelemetry] = useState<TelemetrySnapshot | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [tools, setTools] = useState<ToolSpec[]>([]);
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [settings, setSettings] = useState<SettingsData | null>(null);
+  const [clockText, setClockText] = useState(() => new Date().toLocaleTimeString([], { hour12: false }));
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
@@ -90,27 +97,39 @@ export default function App() {
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      setClockText(new Date().toLocaleTimeString([], { hour12: false }));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const refreshPendingActions = useCallback(async () => {
-    const list = await api.listActions("pending");
+    const [list, logs] = await Promise.all([api.listActions("pending"), api.listAuditLogs()]);
     setPendingActions(list);
+    setAuditLogs(logs);
     if (list.length > 0) {
       setAiState((prev) => (prev === "thinking" ? prev : "awaiting_approval"));
     }
   }, []);
 
   const refreshAll = useCallback(async () => {
-    const [health, convs, w, tls, sett] = await Promise.all([
+    const [health, provStat, convs, w, tls, sett, projs] = await Promise.all([
       api.health(),
+      api.getProvidersStatus(),
       api.listConversations(),
       api.weather(),
       api.listTools(),
       api.getSettings(),
+      api.listProjects(),
     ]);
     setProviderName(health.provider);
+    setProviderStatus(provStat);
     setConversations(convs);
     setWeather(w);
     setTools(tls);
     setSettings(sett);
+    setProjects(projs);
     setTtsEnabled(sett.voice_tts_enabled);
     setWakeEnabled(sett.voice_wake_enabled);
     await refreshPendingActions();
@@ -134,7 +153,7 @@ export default function App() {
         if (!unmounted) setTelemetry(snap);
         await refreshAll();
       } catch (err) {
-        console.error("Bootstrap error:", err);
+        console.error("NEXUS-AI bootstrap error:", err);
         if (!unmounted) setAiState("error");
       }
 
@@ -286,7 +305,7 @@ export default function App() {
     rec.continuous = wakeEnabled && !isListening;
     rec.interimResults = false;
     rec.lang = "en-US";
-    const wakePhrase = (settings?.voice_wake_phrase || "hey jarvis").toLowerCase().trim();
+    const wakePhrase = (settings?.voice_wake_phrase || "hey nexus").toLowerCase().trim();
 
     rec.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
@@ -304,7 +323,7 @@ export default function App() {
             if (stripped.length > 1) {
               void handleSendMessage(stripped);
             } else {
-              void speakText("At your service.");
+              void speakText("Online and ready.");
               setIsListening(true);
             }
           }
@@ -362,63 +381,58 @@ export default function App() {
     setAiState(wakeEnabled ? "wake_armed" : "idle");
   };
 
-  const navItems: { id: TabId; label: string; icon: typeof MessageSquare }[] = [
-    { id: "chat", label: "Command HUD", icon: MessageSquare },
-    { id: "desktop", label: "Desktop Control", icon: MonitorCog },
+  const navItems: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
+    { id: "overview", label: "Dashboard", icon: LayoutDashboard },
+    { id: "chat", label: "Command Chat", icon: MessageSquare },
     { id: "workspace", label: "Workspace", icon: FolderGit2 },
+    { id: "desktop", label: "Desktop Control", icon: MonitorCog },
     { id: "tools", label: "Tools & System", icon: Layers },
   ];
 
+  const cpuPct = telemetry?.cpu_percent ?? 0;
+  const ramPct = telemetry?.memory.percent ?? 0;
+
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#050911] text-slate-100 overflow-hidden">
-      {/* Top HUD Command Bar */}
-      <header className="drag-region h-13 px-4 border-b border-cyan-500/20 bg-slate-950/85 backdrop-blur-md flex items-center justify-between gap-4 shrink-0">
+    <div className="h-screen w-screen flex flex-col bg-[#04070f] text-slate-100 overflow-hidden">
+      {/* Top Command Bar */}
+      <header className="drag-region h-12 px-4 border-b border-sky-500/18 bg-slate-950/90 backdrop-blur-md flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_16px_rgba(34,211,238,0.25)]">
-            <Cpu className="w-4 h-4 text-cyan-300" />
+          <div className="w-8 h-8 rounded-lg bg-sky-500/12 border border-sky-400/40 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-sky-300" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <polygon points="12,2 21,7 21,17 12,22 3,17 3,7" />
+              <circle cx="12" cy="12" r="3" fill="currentColor" />
+            </svg>
           </div>
           <div>
-            <div className="font-display font-bold tracking-[0.2em] text-sm text-cyan-100">
-              J.A.R.V.I.S.
+            <div className="font-display font-bold tracking-[0.18em] text-sm text-slate-100">
+              NEXUS-AI
             </div>
-            <div className="text-[10px] font-mono text-cyan-400/80 uppercase">
+            <div className="text-[10px] font-mono text-sky-400/80 uppercase tracking-wider">
               Personal Desktop Intelligence
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav className="no-drag flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-cyan-500/15">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id)}
-                data-testid={`nav-${item.id}`}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                  active
-                    ? "bg-cyan-500/20 text-cyan-100 border border-cyan-400/40"
-                    : "text-slate-400 hover:text-slate-100 border border-transparent"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* Right Telemetry, Pending & Controls */}
+        <div className="no-drag flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800 text-[11px] font-mono">
+            <span className="text-slate-400">ENGINE</span>
+            <span className="text-sky-300 uppercase">{providerName}</span>
+          </div>
 
-        {/* Right Status & Window Controls */}
-        <div className="no-drag flex items-center gap-2">
+          <div
+            className="hidden md:block px-2.5 py-1 rounded-md bg-slate-900/90 border border-slate-800 text-[11px] font-mono text-slate-200"
+            data-testid="hud-clock"
+          >
+            {clockText}
+          </div>
+
           {pendingActions.length > 0 && (
             <button
               type="button"
               onClick={() => setModalAction(pendingActions[0])}
               data-testid="pending-badge-btn"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-mono animate-pulse cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-mono cursor-pointer"
             >
               <BellRing className="w-3.5 h-3.5" />
               <span>{pendingActions.length} Pending</span>
@@ -429,32 +443,35 @@ export default function App() {
             type="button"
             onClick={() => setSettingsOpen(true)}
             data-testid="open-settings-btn"
-            className="p-2 rounded-lg bg-slate-900/90 hover:bg-cyan-500/15 border border-slate-700 hover:border-cyan-400/40 text-slate-300 hover:text-cyan-200 transition cursor-pointer"
-            title="Settings & API Key Vault"
+            className="p-1.5 rounded-md bg-slate-900/90 hover:bg-sky-500/15 border border-slate-700 hover:border-sky-400/40 text-slate-300 hover:text-sky-200 transition cursor-pointer"
+            title="NEXUS-AI Settings & Key Vault"
           >
             <Settings className="w-4 h-4" />
           </button>
 
-          {window.jarvisDesktop && (
+          {window.nexusDesktop && (
             <div className="flex items-center gap-1 pl-2 border-l border-slate-800">
               <button
                 type="button"
-                onClick={() => window.jarvisDesktop?.windowControl("minimize")}
+                onClick={() => window.nexusDesktop?.windowControl("minimize")}
                 className="p-1.5 rounded hover:bg-slate-800 text-slate-400 cursor-pointer"
+                aria-label="Minimize window"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
-                onClick={() => window.jarvisDesktop?.windowControl("maximize")}
+                onClick={() => window.nexusDesktop?.windowControl("maximize")}
                 className="p-1.5 rounded hover:bg-slate-800 text-slate-400 cursor-pointer"
+                aria-label="Maximize window"
               >
                 <Square className="w-3 h-3" />
               </button>
               <button
                 type="button"
-                onClick={() => window.jarvisDesktop?.windowControl("close")}
+                onClick={() => window.nexusDesktop?.windowControl("close")}
                 className="p-1.5 rounded hover:bg-rose-500/25 text-slate-400 hover:text-rose-300 cursor-pointer"
+                aria-label="Close window"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -463,15 +480,40 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main HUD Grid */}
-      <main className="flex-1 min-h-0 p-3 grid grid-cols-1 md:grid-cols-[290px_1fr] gap-3 overflow-hidden">
-        {/* Left Persistent HUD Rail */}
+      {/* Main Application Shell */}
+      <main className="flex-1 min-h-0 p-3 grid grid-cols-1 md:grid-cols-[264px_1fr] gap-3 overflow-hidden">
+        {/* Left Navigation & Core Sidebar */}
         <aside className="flex flex-col gap-3 overflow-y-auto pr-0.5 min-h-0">
           <ArcCore state={aiState} providerName={providerName} />
+
+          {/* Vertical Navigation */}
+          <nav className="hud-panel rounded-lg p-2 space-y-1" aria-label="Primary Navigation">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveTab(item.id)}
+                  data-testid={`nav-${item.id}`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition cursor-pointer ${
+                    active
+                      ? "bg-sky-500/18 text-sky-100 border border-sky-400/40"
+                      : "text-slate-300 hover:text-slate-100 hover:bg-slate-900/70 border border-transparent"
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${active ? "text-sky-300" : "text-slate-400"}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
           <VoiceWaveform
             ttsEnabled={ttsEnabled}
             wakeEnabled={wakeEnabled}
-            wakePhrase={settings?.voice_wake_phrase || "hey jarvis"}
+            wakePhrase={settings?.voice_wake_phrase || "hey nexus"}
             isListening={isListening}
             isSpeaking={isSpeaking}
             speechSupported={Boolean(speechCtor)}
@@ -488,15 +530,60 @@ export default function App() {
               void api.updateSettings({ voice_tts_enabled: next });
             }}
           />
-          <TelemetryPanel
-            telemetry={telemetry}
-            weather={weather}
-            onRefreshWeather={async () => setWeather(await api.weather(undefined, true))}
-          />
+
+          {/* Compact Live Telemetry Strip */}
+          <div className="hud-panel rounded-lg p-3 space-y-2 text-[11px] font-mono mt-auto">
+            <div className="flex items-center justify-between text-slate-400 uppercase tracking-wider text-[10px]">
+              <span>Compute Load</span>
+              <span className="text-emerald-400">1 Hz</span>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-slate-300">
+                <span>CPU</span>
+                <span data-testid="cpu-readout">{cpuPct.toFixed(1)}%</span>
+              </div>
+              <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                <div className="h-full bg-sky-400 transition-all" style={{ width: `${Math.min(100, cpuPct)}%` }} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-slate-300">
+                <span>RAM</span>
+                <span data-testid="ram-readout">
+                  {telemetry ? `${telemetry.memory.used_gb}/${telemetry.memory.total_gb} GB` : "—"}
+                </span>
+              </div>
+              <div className="h-1 bg-slate-900 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all ${ramPct > 85 ? "bg-amber-400" : "bg-blue-400"}`}
+                  style={{ width: `${Math.min(100, ramPct)}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </aside>
 
-        {/* Active Stage */}
+        {/* Active View Stage */}
         <section className="min-h-0 overflow-hidden">
+          {activeTab === "overview" && (
+            <DashboardView
+              aiState={aiState}
+              providerStatus={providerStatus}
+              telemetry={telemetry}
+              weather={weather}
+              tools={tools}
+              projects={projects}
+              auditLogs={auditLogs}
+              pendingActions={pendingActions}
+              voiceTtsEnabled={ttsEnabled}
+              voiceWakeEnabled={wakeEnabled}
+              isListening={isListening}
+              onRefreshWeather={async () => setWeather(await api.weather(undefined, true))}
+              onNavigate={(tab) => setActiveTab(tab)}
+              onOpenSettings={() => setSettingsOpen(true)}
+              onReviewPending={(act) => setModalAction(act)}
+            />
+          )}
           {activeTab === "chat" && (
             <ChatView
               conversations={conversations}

@@ -19,7 +19,7 @@ class _DATA_BLOB(ctypes.Structure):
     ]
 
 
-def _dpapi_protect(plaintext: bytes, description: str = "JARVIS-Secret") -> bytes:
+def _dpapi_protect(plaintext: bytes, description: str = "NEXUS-AI-Secret") -> bytes:
     if os.name != "nt":
         raise RuntimeError("DPAPI vault requires Windows")
     crypt32 = ctypes.windll.crypt32
@@ -109,7 +109,7 @@ class SecretsVault:
         if not cleaned:
             raw.pop(name, None)
         else:
-            encrypted = _dpapi_protect(cleaned.encode("utf-8"), description=f"JARVIS:{name}")
+            encrypted = _dpapi_protect(cleaned.encode("utf-8"), description=f"NEXUS-AI:{name}")
             raw[name] = base64.b64encode(encrypted).decode("ascii")
         self._write_raw(raw)
 

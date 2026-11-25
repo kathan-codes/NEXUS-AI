@@ -1,4 +1,4 @@
-"""Comprehensive backend test suite for J.A.R.V.I.S. Core."""
+"""Comprehensive backend test suite for NEXUS-AI Core."""
 
 from __future__ import annotations
 
@@ -44,6 +44,7 @@ def test_health_and_telemetry(temp_env):
     assert res.status_code == 200
     body = res.json()
     assert body["status"] == "online"
+    assert body["service"] == "nexus-ai-core"
     assert body["tools_count"] >= 10
 
     tel = client.get("/api/telemetry")
@@ -153,8 +154,8 @@ def test_workspace_project_tasks_and_path_guard(temp_env):
 
 def test_chat_and_local_command_router(temp_env):
     client, proj_dir, _ = temp_env
-    # System status via chat
-    r1 = client.post("/api/chat", json={"message": "system status"})
+    # System status via chat (including wake prefix)
+    r1 = client.post("/api/chat", json={"message": "hey nexus system status"})
     assert r1.status_code == 200
     body1 = r1.json()
     cid = body1["conversation_id"]

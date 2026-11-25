@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import tempfile
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -44,11 +45,19 @@ def is_safe_path(target: Path, allowed_root: Path | None = None) -> tuple[bool, 
     if allowed_root is not None:
         root_resolved = allowed_root.resolve()
         try:
-            resolved.relative_to(root_resolved)
+            rel = resolved.relative_to(root_resolved)
         except ValueError:
             return False, f"Path '{resolved}' is outside allowed root '{root_resolved}'"
+        parts_to_check = rel.parts
+    else:
+        temp_root = Path(tempfile.gettempdir()).resolve()
+        try:
+            rel_temp = resolved.relative_to(temp_root)
+            parts_to_check = rel_temp.parts
+        except ValueError:
+            parts_to_check = resolved.parts
 
-    for part in resolved.parts:
+    for part in parts_to_check:
         if part in BLOCKED_DIR_NAMES:
             return False, f"Access to protected directory '{part}' is blocked"
 

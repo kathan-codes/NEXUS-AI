@@ -50,16 +50,16 @@ def speak_sapi(text: str, voice_name: str | None = None, rate: int = 0) -> dict[
     rate_clamped = max(-5, min(5, int(rate)))
     # Pass text via environment variable to avoid shell interpolation/injection issues.
     env = dict(os.environ)
-    env["JARVIS_TTS_TEXT"] = cleaned
-    env["JARVIS_TTS_VOICE"] = (voice_name or "").strip()
-    env["JARVIS_TTS_RATE"] = str(rate_clamped)
+    env["NEXUS_TTS_TEXT"] = cleaned
+    env["NEXUS_TTS_VOICE"] = (voice_name or "").strip()
+    env["NEXUS_TTS_RATE"] = str(rate_clamped)
 
     ps = (
         "Add-Type -AssemblyName System.Speech; "
         "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-        "$s.Rate = [int]$env:JARVIS_TTS_RATE; "
-        "if ($env:JARVIS_TTS_VOICE) { try { $s.SelectVoice($env:JARVIS_TTS_VOICE) } catch {} }; "
-        "$s.Speak($env:JARVIS_TTS_TEXT)"
+        "$s.Rate = [int]$env:NEXUS_TTS_RATE; "
+        "if ($env:NEXUS_TTS_VOICE) { try { $s.SelectVoice($env:NEXUS_TTS_VOICE) } catch {} }; "
+        "$s.Speak($env:NEXUS_TTS_TEXT)"
     )
     try:
         subprocess.Popen(

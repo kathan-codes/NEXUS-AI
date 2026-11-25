@@ -135,7 +135,7 @@ export function VoiceWaveform({
   }, [isListening, wakeEnabled, isSpeaking, micActive]);
 
   return (
-    <div className="hud-panel rounded-xl p-3.5 space-y-2.5">
+    <div className="hud-panel rounded-lg p-3.5 space-y-2.5">
       <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400">
         <span>Voice Link</span>
         <span className={micActive ? "text-emerald-400" : isSpeaking ? "text-cyan-300" : "text-slate-500"}>
