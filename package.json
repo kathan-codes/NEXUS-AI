@@ -1,0 +1,16 @@
+{
+  "name": "jarvis-desktop-assistant",
+  "version": "1.0.0",
+  "description": "J.A.R.V.I.S. — Futuristic Personal Desktop AI Assistant",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev:backend": "python -m backend.run",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "desktop": "electron .",
+    "test:backend": "python -m pytest backend/tests -v"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0"
+  }
+}

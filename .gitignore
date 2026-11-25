@@ -1,0 +1,61 @@
+# --- Environment, Secrets & Credentials ---
+.env
+.env.*
+!.env.example
+secrets.vault.json
+*.vault.json
+credentials.json
+*.pem
+*.key
+
+# --- Private Local Data & Runtime Databases ---
+/data/*
+!/data/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# --- Python / FastAPI / Pytest ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
+.coverage
+htmlcov/
+
+# --- Node.js / Vite / TypeScript / Electron ---
+node_modules/
+dist/
+out/
+release/
+.vite/
+*.tsbuildinfo
+
+# --- Logs & Temporary Files ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# --- IDE & OS Metadata ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.user
+Thumbs.db
+desktop.ini
+.DS_Store

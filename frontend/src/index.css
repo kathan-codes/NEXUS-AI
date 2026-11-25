@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --hud-bg: #050911;
+    --hud-panel: rgba(10, 18, 32, 0.84);
+    --hud-border: rgba(34, 211, 238, 0.22);
+    --hud-cyan: #22d3ee;
+    --hud-blue: #3b82f6;
+    --hud-amber: #f59e0b;
+    --hud-emerald: #10b981;
+  }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    background-color: var(--hud-bg);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(34, 211, 238, 0.08), transparent 36%),
+      radial-gradient(circle at 82% 85%, rgba(59, 130, 246, 0.08), transparent 40%),
+      linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+    overflow: hidden;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+.hud-panel {
+  background: var(--hud-panel);
+  border: 1px solid var(--hud-border);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(165, 243, 252, 0.06),
+    0 12px 32px rgba(2, 6, 15, 0.55);
+}
+
+.hud-panel-amber {
+  background: rgba(24, 18, 10, 0.88);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.12);
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 24s linear infinite;
+  transform-origin: center;
+}
+
+.animate-spin-fast {
+  animation: spinSlow 4.5s linear infinite;
+  transform-origin: center;
+}
+
+.animate-spin-reverse {
+  animation: spinReverse 14s linear infinite;
+  transform-origin: center;
+}
+
+/* Custom sleek HUD scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.28);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.5);
+}
